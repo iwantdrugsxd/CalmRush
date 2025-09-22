@@ -217,7 +217,7 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -288,6 +288,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          name: registerData.name,
           email: registerData.email,
           password: registerData.password,
         }),
@@ -297,7 +298,7 @@ export default function Home() {
 
       if (result.success) {
         setShowRegisterModal(false);
-        setRegisterData({ email: '', password: '', confirmPassword: '' });
+        setRegisterData({ name: '', email: '', password: '', confirmPassword: '' });
         
         // Auto-login after successful registration
         const loginResult = await login(registerData.email, registerData.password);
@@ -488,6 +489,20 @@ export default function Home() {
             </h2>
             
             <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={registerData.name}
+                  onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Enter your name"
+                  required
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email
