@@ -621,18 +621,17 @@ export default function PlaygroundPage() {
     }
   }, [floatingThoughts, showResetModal, hasShownResetModal]);
 
-  // Global mouse event listeners for smooth thought dragging
+  // Global mouse and touch event listeners for smooth thought dragging
   useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
+    const handleGlobalMove = (clientX: number, clientY: number) => {
       if (isDraggingThought && draggedThoughtId) {
-        e.preventDefault();
-        setDragPosition({ x: e.clientX, y: e.clientY });
+        setDragPosition({ x: clientX, y: clientY });
         
         // Update the dragged thought position
         setFloatingThoughts(prev => 
           prev.map(thought => 
             thought.id === draggedThoughtId 
-              ? { ...thought, x: e.clientX, y: e.clientY, isDragging: true }
+              ? { ...thought, x: clientX, y: clientY, isDragging: true }
               : thought
           )
         );
@@ -641,7 +640,7 @@ export default function PlaygroundPage() {
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight / 2;
         const distance = Math.sqrt(
-          Math.pow(e.clientX - centerX, 2) + Math.pow(e.clientY - centerY, 2)
+          Math.pow(clientX - centerX, 2) + Math.pow(clientY - centerY, 2)
         );
         
         const isOver = distance < 200;
@@ -652,10 +651,23 @@ export default function PlaygroundPage() {
       }
     };
 
-    const handleGlobalMouseUp = (e: MouseEvent) => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      handleGlobalMove(e.clientX, e.clientY);
+    };
+
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        handleGlobalMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleGlobalEnd = (e: Event) => {
       if (isDraggingThought) {
         e.preventDefault();
-        console.log('Global mouse up - isOver3DModel:', isOver3DModel, 'draggedThoughtId:', draggedThoughtId);
+        console.log('Global end - isOver3DModel:', isOver3DModel, 'draggedThoughtId:', draggedThoughtId);
         
         // Reset the dragged thought's dragging state
         if (draggedThoughtId) {
@@ -682,12 +694,16 @@ export default function PlaygroundPage() {
 
     if (isDraggingThought) {
       document.addEventListener('mousemove', handleGlobalMouseMove, { passive: false });
-      document.addEventListener('mouseup', handleGlobalMouseUp, { passive: false });
+      document.addEventListener('mouseup', handleGlobalEnd, { passive: false });
+      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+      document.addEventListener('touchend', handleGlobalEnd, { passive: false });
     }
 
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove);
-      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('mouseup', handleGlobalEnd);
+      document.removeEventListener('touchmove', handleGlobalTouchMove);
+      document.removeEventListener('touchend', handleGlobalEnd);
     };
   }, [isDraggingThought, isOver3DModel, draggedThoughtId]);
 
@@ -750,11 +766,11 @@ export default function PlaygroundPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
-        className="absolute top-4 left-4 right-4 sm:top-6 sm:left-6 sm:right-6 z-20 flex justify-between items-center"
+        className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-30 flex justify-between items-center"
       >
         {/* Logo */}
         <motion.h1 
-          className="text-xl sm:text-2xl md:text-3xl font-bold text-white cursor-pointer"
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white cursor-pointer"
           whileHover={{ scale: 1.05 }}
           onClick={() => router.push('/')}
         >
@@ -762,11 +778,11 @@ export default function PlaygroundPage() {
         </motion.h1>
         
         {/* Floating Navigation Items */}
-        <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-8">
+        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 lg:space-x-8">
           {/* Your Space Button */}
           <motion.button
             onClick={() => setShowWellnessCenter(true)}
-            className="text-white/80 hover:text-white text-sm sm:text-base md:text-lg font-medium transition-all duration-300 hover:scale-105"
+            className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base lg:text-lg font-medium transition-all duration-300 hover:scale-105 px-2 py-1 rounded-lg hover:bg-white/10"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -778,16 +794,16 @@ export default function PlaygroundPage() {
           <div className="relative">
             <motion.button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="flex items-center space-x-1 sm:space-x-2 text-white/80 hover:text-white transition-all duration-300"
+              className="flex items-center space-x-1 sm:space-x-2 text-white/90 hover:text-white transition-all duration-300 px-2 py-1 rounded-lg hover:bg-white/10"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
                 <span className="text-white text-xs sm:text-sm font-semibold">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <span className="text-sm sm:text-base md:text-lg font-medium hidden sm:inline">{user?.name || 'User'}</span>
+              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-medium hidden sm:inline">{user?.name || 'User'}</span>
               <motion.svg
                 className="w-3 h-3 sm:w-4 sm:h-4"
                 animate={{ rotate: showProfileDropdown ? 180 : 0 }}
@@ -972,7 +988,7 @@ export default function PlaygroundPage() {
             } as any;
             handleThoughtMouseUp(mouseEvent);
           }}
-          className="absolute cursor-move select-none z-20 touch-manipulation"
+          className="absolute cursor-move select-none z-20 touch-manipulation active:scale-105"
           style={{
             left: 0,
             top: 0,
@@ -981,7 +997,8 @@ export default function PlaygroundPage() {
         >
                 <div 
                   className={`
-                    px-4 py-2 sm:px-6 sm:py-3 rounded-2xl backdrop-blur-2xl border-2 font-medium text-xs sm:text-sm
+                    px-4 py-3 sm:px-6 sm:py-4 rounded-2xl backdrop-blur-2xl border-2 font-medium text-sm sm:text-base
+                    min-w-[80px] min-h-[40px] flex items-center justify-center
                     ${thought.isProcessed ? 
                       'bg-green-500/20 border-green-400 text-green-200' : 
                       thought.sentiment === 'positive' ? 
@@ -990,7 +1007,8 @@ export default function PlaygroundPage() {
                       'bg-red-500/10 border-red-400 text-red-300' : 
                       'bg-cyan-500/10 border-cyan-400 text-cyan-300'
                     }
-                    ${thought.isDragging ? 'shadow-2xl' : 'shadow-lg'}
+                    ${thought.isDragging ? 'shadow-2xl scale-105' : 'shadow-lg'}
+                    transition-all duration-200 touch-manipulation
                   `}
             style={{
               boxShadow: thought.isProcessed ? 
