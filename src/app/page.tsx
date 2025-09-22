@@ -89,7 +89,7 @@ function GlassmorphicSubheadline() {
 }
 
 // Advanced CTA Button Component
-function AdvancedCTAButton() {
+function AdvancedCTAButton({ user, onShowLogin }: { user: any; onShowLogin: () => void }) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
@@ -103,7 +103,14 @@ function AdvancedCTAButton() {
   };
 
   const handleClick = () => {
-    router.push('/playground');
+    // Check if user is authenticated (cached in context)
+    if (user) {
+      // User is logged in, go directly to playground
+      router.push('/playground');
+    } else {
+      // User is not logged in, show login modal
+      onShowLogin();
+    }
   };
 
   return (
@@ -364,7 +371,10 @@ export default function Home() {
             
             {/* CTA Button - Centered */}
             <div>
-              <AdvancedCTAButton />
+              <AdvancedCTAButton 
+                user={user} 
+                onShowLogin={() => setShowLoginModal(true)} 
+              />
             </div>
           </div>
         </div>

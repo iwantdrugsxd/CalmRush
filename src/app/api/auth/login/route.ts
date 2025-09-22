@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set user ID in cookie
+    // Set user ID in cookie for session management
     const cookieStore = await cookies();
     cookieStore.set('userId', user.id, {
       httpOnly: true,
@@ -51,6 +51,15 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 30 // 30 days for better persistence
+    });
+
+    // Also set a session flag
+    cookieStore.set('isAuthenticated', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30 // 30 days
     });
 
     // Remove password from response

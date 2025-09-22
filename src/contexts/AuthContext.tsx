@@ -37,12 +37,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.log('Checking authentication...');
         
-        // Check if we have cookies in the browser
+        // First check if we have authentication cookies
         if (typeof document !== 'undefined') {
           const cookies = document.cookie;
           console.log('Browser cookies:', cookies);
           const userIdCookie = cookies.split(';').find(cookie => cookie.trim().startsWith('userId='));
+          const isAuthCookie = cookies.split(';').find(cookie => cookie.trim().startsWith('isAuthenticated='));
+          
           console.log('UserId cookie:', userIdCookie);
+          console.log('Auth cookie:', isAuthCookie);
+          
+          // If no auth cookies, user is definitely not logged in
+          if (!userIdCookie || !isAuthCookie) {
+            console.log('No authentication cookies found');
+            setUser(null);
+            setLoading(false);
+            return;
+          }
         }
         
         const response = await fetch('/api/auth/me', {
@@ -133,6 +144,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       setUser(null);
+      
+      // Clear authentication cookies immediately
+      if (typeof document !== 'undefined') {
+        document.cookie = 'userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'isAuthenticated=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      }
+      
       await fetch('/api/auth/logout', { 
         method: 'POST',
         credentials: 'include' // Ensure cookies are sent
