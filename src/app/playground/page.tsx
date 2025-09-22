@@ -107,6 +107,7 @@ export default function PlaygroundPage() {
   const [loginError, setLoginError] = useState('');
   const [showResetModal, setShowResetModal] = useState(false);
   const [completedSolutions, setCompletedSolutions] = useState<Array<{problem: string, solution: string}>>([]);
+  const [hasShownResetModal, setHasShownResetModal] = useState(false);
   
   // Background music
   const [backgroundMusic, setBackgroundMusic] = useState<HTMLAudioElement | null>(null);
@@ -227,6 +228,7 @@ export default function PlaygroundPage() {
       setFloatingThoughts([]);
       setShowResetModal(false);
       setCompletedSolutions([]);
+      setHasShownResetModal(false); // Reset so modal can appear again in future sessions
       
       // Show success message
       console.log('✅ Playground reset successfully! Solutions saved to profile.');
@@ -269,6 +271,8 @@ export default function PlaygroundPage() {
         console.log('Thought created successfully:', newThought);
         setFloatingThoughts(prev => [...prev, { ...newThought, isDragging: false }]);
         setThought('');
+        // Reset modal state when new thoughts are added
+        setHasShownResetModal(false);
       } catch (error) {
         console.error('Failed to create thought:', error);
         // Show user-friendly error message
@@ -287,6 +291,8 @@ export default function PlaygroundPage() {
         };
         setFloatingThoughts(prev => [...prev, fallbackThought]);
         setThought('');
+        // Reset modal state when new thoughts are added
+        setHasShownResetModal(false);
       } finally {
         setIsLoading(false);
       }
@@ -591,9 +597,9 @@ export default function PlaygroundPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if all thoughts are processed and show reset modal
+  // Check if all thoughts are processed and show reset modal (only once per session)
   useEffect(() => {
-    if (floatingThoughts.length > 0) {
+    if (floatingThoughts.length > 0 && !hasShownResetModal) {
       const allProcessed = floatingThoughts.every(thought => thought.isProcessed);
       if (allProcessed && !showResetModal) {
         // Collect all completed solutions
@@ -606,9 +612,10 @@ export default function PlaygroundPage() {
         
         setCompletedSolutions(solutions);
         setShowResetModal(true);
+        setHasShownResetModal(true); // Mark that we've shown the modal
       }
     }
-  }, [floatingThoughts, showResetModal]);
+  }, [floatingThoughts, showResetModal, hasShownResetModal]);
 
   // Global mouse event listeners for smooth thought dragging
   useEffect(() => {
@@ -1225,7 +1232,11 @@ export default function PlaygroundPage() {
               
               <div className="flex justify-center space-x-4">
                 <motion.button
-                  onClick={() => setShowResetModal(false)}
+                  onClick={() => {
+                    setShowResetModal(false);
+                    // Keep the green thoughts and allow for more problems
+                    // Don't reset hasShownResetModal so modal won't appear again
+                  }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
