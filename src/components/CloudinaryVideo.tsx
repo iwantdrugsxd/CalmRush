@@ -60,7 +60,7 @@ export default function CloudinaryVideo({
         console.error('Error fetching video URL:', error);
         setHasError(true);
         setIsLoading(false);
-        onError?.(error as Event);
+        onError?.(error as any);
       }
     };
 
