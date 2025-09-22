@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  password  String?  // For local authentication
+  googleId  String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  thoughts       Thought[]
+  thoughtHistory ThoughtHistory[]
+  meditationSessions MeditationSession[]
+  breathingSessions BreathingSession[]
+
+  @@map("users")
+}
+
+model Thought {
+  id          String   @id @default(cuid())
+  text        String
+  x           Float
+  y           Float
+  color       String
+  sentiment   String
+  isProcessed Boolean  @default(false)
+  solution    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("thoughts")
+}
+
+model ThoughtHistory {
+  id        String   @id @default(cuid())
+  problem   String
+  solution  String
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("thought_history")
+}
+
+model MeditationSession {
+  id        String   @id @default(cuid())
+  duration  Int      // Duration in minutes
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("meditation_sessions")
+}
+
+model BreathingSession {
+  id        String   @id @default(cuid())
+  duration  Int      // Duration in minutes
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("breathing_sessions")
+}
