@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "prisma generate && prisma db push && next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "upload-videos": "node scripts/upload-videos.js"
+    "upload-videos": "node scripts/upload-videos.js",
+    "setup-db": "node scripts/setup-db.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
