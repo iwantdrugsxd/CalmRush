@@ -9,12 +9,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check for userId cookie for protected routes
+  // Check for both userId and isAuthenticated cookies for protected routes
   const userId = request.cookies.get('userId')?.value;
+  const isAuthenticated = request.cookies.get('isAuthenticated')?.value;
   
   // Protect /playground and /history routes
   if (pathname.startsWith('/playground') || pathname.startsWith('/history')) {
-    if (!userId) {
+    if (!userId || !isAuthenticated) {
       const redirectUrl = new URL('/', request.url);
       redirectUrl.searchParams.set('login', 'required');
       redirectUrl.searchParams.set('redirect', pathname);

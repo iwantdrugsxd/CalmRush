@@ -85,7 +85,6 @@ function Scene3D() {
 export default function PlaygroundPage() {
   const { user, loading, logout, login, authChecked } = useAuth();
   const router = useRouter();
-  const hasRedirected = useRef(false);
   const [thought, setThought] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [floatingThoughts, setFloatingThoughts] = useState<FloatingThought[]>([]);
@@ -200,23 +199,6 @@ export default function PlaygroundPage() {
       }
     };
   }, [backgroundMusic]);
-
-  // Handle redirect when user is not authenticated after auth check
-  useEffect(() => {
-    // Only redirect if auth is checked AND we're sure there's no user
-    // Add a delay to prevent race conditions
-    if (authChecked && !user && !loading && !hasRedirected.current) {
-      const timer = setTimeout(() => {
-        // Double-check that we still don't have a user before redirecting
-        if (!user && !hasRedirected.current) {
-          hasRedirected.current = true;
-          router.push('/?login=required&redirect=/playground');
-        }
-      }, 500); // 500ms delay to ensure state is stable
-      
-      return () => clearTimeout(timer);
-    }
-  }, [authChecked, user, loading, router]);
 
   const handleLogout = async () => {
     try {
@@ -700,16 +682,10 @@ export default function PlaygroundPage() {
     );
   }
 
-  // Show loading while redirecting
+  // If user is not authenticated after auth check, redirect to home
   if (authChecked && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p className="text-white text-lg">Redirecting to login...</p>
-        </div>
-      </div>
-    );
+    router.push('/?login=required&redirect=/playground');
+    return null;
   }
 
   return (
@@ -1391,7 +1367,6 @@ export default function PlaygroundPage() {
               </div>
             </motion.div>
           </motion.div>
-        )}
         </>
       ) : (
         // Fallback when user is not authenticated

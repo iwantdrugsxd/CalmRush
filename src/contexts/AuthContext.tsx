@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   loading: boolean;
+  authChecked: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,72 +25,53 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const router = useRouter();
 
-  // Debug user state changes
-  useEffect(() => {
-    console.log('User state changed:', user);
-  }, [user]);
 
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('Checking authentication...');
-        
-        // First check if we have authentication cookies
-        if (typeof document !== 'undefined') {
-          const cookies = document.cookie;
-          console.log('Browser cookies:', cookies);
-          const userIdCookie = cookies.split(';').find(cookie => cookie.trim().startsWith('userId='));
-          const isAuthCookie = cookies.split(';').find(cookie => cookie.trim().startsWith('isAuthenticated='));
-          
-          console.log('UserId cookie:', userIdCookie);
-          console.log('Auth cookie:', isAuthCookie);
-          
-          // If no auth cookies, user is definitely not logged in
-          if (!userIdCookie || !isAuthCookie) {
-            console.log('No authentication cookies found');
-            setUser(null);
-            setLoading(false);
-            return;
-          }
-        }
+        // Always make the API call to check authentication
+        // The API will handle cookie validation
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
         
         const response = await fetch('/api/auth/me', {
           method: 'GET',
           credentials: 'include', // Ensure cookies are sent
+          signal: controller.signal
         });
-        console.log('Auth check response:', response.status);
+        
+        clearTimeout(timeoutId);
         
         if (response.ok) {
           const data = await response.json();
-          console.log('User data received:', data);
           if (data.user) {
             setUser(data.user);
-            console.log('User set in context:', data.user);
           } else {
-            console.log('No user data in response');
             setUser(null);
           }
         } else {
-          console.log('Auth check failed with status:', response.status);
           setUser(null);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Auth check error:', error);
         setUser(null);
       } finally {
+        // Set states immediately without delay
         setLoading(false);
+        setAuthChecked(true);
       }
     };
 
+    // Start auth check immediately
     checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('Attempting login for:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -100,18 +82,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
 
       if (data.success) {
-        console.log('Login successful, setting user:', data.data);
         setUser(data.data);
+        // Force a small delay to ensure state is updated
+        await new Promise(resolve => setTimeout(resolve, 100));
         return { success: true };
       } else {
-        console.log('Login failed:', data.error);
         return { success: false, error: data.error };
       }
     } catch (error) {
-      console.error('Login error:', error);
       return { success: false, error: 'Login failed' };
     }
   };
@@ -131,12 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.success) {
         setUser(data.data);
+        // Force a small delay to ensure state is updated
+        await new Promise(resolve => setTimeout(resolve, 100));
         return { success: true };
       } else {
         return { success: false, error: data.error };
       }
     } catch (error) {
-      console.error('Registration error:', error);
       return { success: false, error: 'Registration failed' };
     }
   };
@@ -157,14 +138,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       router.push('/');
     } catch (error) {
-      console.error('Logout error:', error);
       // Still redirect even if logout fails
       router.push('/');
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, authChecked }}>
       {children}
     </AuthContext.Provider>
   );

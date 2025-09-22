@@ -212,7 +212,7 @@ function FooterTagline() {
 }
 
 export default function Home() {
-  const { user, login } = useAuth();
+  const { user, login, loading, authChecked } = useAuth();
   const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -227,29 +227,24 @@ export default function Home() {
   useEffect(() => {
     const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      console.log('URL params:', urlParams.toString());
-      console.log('User logged in:', !!user);
       
-      // Only show login modal if user is not logged in and login is required
-      if (urlParams.get('login') === 'required' && !user) {
-        console.log('Showing login modal due to redirect');
-        setShowLoginModal(true);
-      } else if (urlParams.get('login') === 'required' && user) {
-        // If user is logged in, redirect to playground directly
-        console.log('User already logged in, redirecting to playground');
-        const redirectTo = urlParams.get('redirect') || '/playground';
-        router.push(redirectTo);
+      // If login is required, show modal immediately if not authenticated
+      if (urlParams.get('login') === 'required') {
+        if (user && authChecked) {
+          // If user is logged in, redirect to playground directly
+          const redirectTo = urlParams.get('redirect') || '/playground';
+          router.push(redirectTo);
+        } else if (authChecked) {
+          // If auth is checked and no user, show login modal
+          setShowLoginModal(true);
+        }
+        // If auth not checked yet, wait for it
       }
     };
 
-    // Check immediately
+    // Check URL params immediately and also when auth state changes
     checkUrlParams();
-    
-    // Also check after a small delay to ensure URL is fully loaded
-    const timeoutId = setTimeout(checkUrlParams, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, [user, router]);
+  }, [user, loading, authChecked, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -324,6 +319,27 @@ export default function Home() {
       setIsRegistering(false);
     }
   };
+
+  // Show loading while checking authentication with fallback timeout
+  const [showFallback, setShowFallback] = useState(false);
+  
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading || !authChecked) {
+        setShowFallback(true);
+      }
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(timeoutId);
+  }, [loading, authChecked]);
+  
+  if ((loading || !authChecked) && !showFallback) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-screen min-h-screen overflow-hidden">
