@@ -730,9 +730,13 @@ export default function PlaygroundPage() {
 
   return (
     <div 
-      className="relative w-full h-screen min-h-screen overflow-hidden touch-none"
+      className="relative w-full h-screen min-h-screen overflow-hidden touch-none safe-area-inset"
       onMouseUp={handleMouseUp}
       onTouchEnd={handleMouseUp}
+      style={{
+        minHeight: '100vh',
+        minHeight: '100dvh', // Dynamic viewport height for mobile
+      }}
     >
       {/* Only show playground content if user is authenticated */}
       {user ? (
@@ -761,28 +765,34 @@ export default function PlaygroundPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20"></div>
       </div>
 
-      {/* Floating Navigation */}
+      {/* Floating Navigation - Mobile Optimized */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
-        className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-4 z-30 flex justify-between items-center"
+        className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4"
+        style={{
+          paddingTop: 'max(8px, env(safe-area-inset-top))',
+          paddingLeft: 'max(12px, env(safe-area-inset-left))',
+          paddingRight: 'max(12px, env(safe-area-inset-right))',
+        }}
       >
         {/* Logo */}
         <motion.h1 
-          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white cursor-pointer"
+          className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white cursor-pointer drop-shadow-lg"
           whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => router.push('/')}
         >
           CalmRush
         </motion.h1>
         
         {/* Floating Navigation Items */}
-        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 lg:space-x-8">
+        <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 lg:space-x-6 xl:space-x-8">
           {/* Your Space Button */}
           <motion.button
             onClick={() => setShowWellnessCenter(true)}
-            className="text-white/90 hover:text-white text-xs sm:text-sm md:text-base lg:text-lg font-medium transition-all duration-300 hover:scale-105 px-2 py-1 rounded-lg hover:bg-white/10"
+            className="text-white/95 hover:text-white text-sm sm:text-base md:text-lg font-semibold transition-all duration-300 hover:scale-105 px-3 py-2 rounded-xl hover:bg-white/15 backdrop-blur-sm border border-white/20 min-h-[44px] flex items-center justify-center"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -794,18 +804,18 @@ export default function PlaygroundPage() {
           <div className="relative">
             <motion.button
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="flex items-center space-x-1 sm:space-x-2 text-white/90 hover:text-white transition-all duration-300 px-2 py-1 rounded-lg hover:bg-white/10"
+              className="flex items-center space-x-2 sm:space-x-3 text-white/95 hover:text-white transition-all duration-300 px-3 py-2 rounded-xl hover:bg-white/15 backdrop-blur-sm border border-white/20 min-h-[44px]"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                <span className="text-white text-xs sm:text-sm font-semibold">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <span className="text-white text-sm sm:text-base font-bold">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <span className="text-xs sm:text-sm md:text-base lg:text-lg font-medium hidden sm:inline">{user?.name || 'User'}</span>
+              <span className="text-sm sm:text-base md:text-lg font-semibold hidden sm:inline">{user?.name || 'User'}</span>
               <motion.svg
-                className="w-3 h-3 sm:w-4 sm:h-4"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 animate={{ rotate: showProfileDropdown ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
                 fill="none"
@@ -869,9 +879,10 @@ export default function PlaygroundPage() {
         {/* Visual drop zone indicator when dragging thoughts */}
         {isDraggingThought && (
           <div
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full border-4 border-dashed border-cyan-400 opacity-50 pointer-events-none"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full border-4 border-dashed border-cyan-400 opacity-60 pointer-events-none shadow-2xl"
             style={{
-              animation: 'pulse 2s infinite'
+              animation: 'pulse 2s infinite',
+              boxShadow: '0 0 30px rgba(34, 211, 238, 0.3), inset 0 0 30px rgba(34, 211, 238, 0.1)'
             }}
           />
         )}
@@ -915,15 +926,16 @@ export default function PlaygroundPage() {
       </Canvas>
       </div>
       
-      {/* Answers Text - Separate Element */}
+      {/* Answers Text - Mobile Optimized */}
       <motion.h2
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 1 }}
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-16 sm:translate-y-20 text-center text-white text-lg sm:text-xl md:text-2xl font-bold z-10 px-4"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 translate-y-12 sm:translate-y-16 md:translate-y-20 text-center text-white text-base sm:text-lg md:text-xl lg:text-2xl font-bold z-10 px-4 py-2 rounded-xl backdrop-blur-sm bg-black/20 border border-white/20"
         style={{
-          textShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)',
-          fontFamily: 'Inter, sans-serif'
+          textShadow: '0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.5)',
+          fontFamily: 'Inter, sans-serif',
+          minWidth: '120px'
         }}
       >
         Answers
@@ -997,18 +1009,19 @@ export default function PlaygroundPage() {
         >
                 <div 
                   className={`
-                    px-4 py-3 sm:px-6 sm:py-4 rounded-2xl backdrop-blur-2xl border-2 font-medium text-sm sm:text-base
-                    min-w-[80px] min-h-[40px] flex items-center justify-center
+                    px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-5 rounded-2xl backdrop-blur-2xl border-2 font-semibold text-sm sm:text-base md:text-lg
+                    min-w-[100px] min-h-[48px] sm:min-w-[120px] sm:min-h-[52px] flex items-center justify-center
                     ${thought.isProcessed ? 
-                      'bg-green-500/20 border-green-400 text-green-200' : 
+                      'bg-green-500/25 border-green-400 text-green-100 shadow-green-500/30' : 
                       thought.sentiment === 'positive' ? 
-                      'bg-green-500/10 border-green-400 text-green-300' : 
+                      'bg-green-500/15 border-green-400 text-green-200 shadow-green-500/20' : 
                       thought.sentiment === 'negative' ? 
-                      'bg-red-500/10 border-red-400 text-red-300' : 
-                      'bg-cyan-500/10 border-cyan-400 text-cyan-300'
+                      'bg-red-500/15 border-red-400 text-red-200 shadow-red-500/20' : 
+                      'bg-cyan-500/15 border-cyan-400 text-cyan-200 shadow-cyan-500/20'
                     }
-                    ${thought.isDragging ? 'shadow-2xl scale-105' : 'shadow-lg'}
-                    transition-all duration-200 touch-manipulation
+                    ${thought.isDragging ? 'shadow-2xl scale-110' : 'shadow-xl'}
+                    transition-all duration-200 touch-manipulation active:scale-105
+                    hover:scale-105 cursor-grab active:cursor-grabbing
                   `}
             style={{
               boxShadow: thought.isProcessed ? 
@@ -1043,13 +1056,16 @@ export default function PlaygroundPage() {
         </motion.div>
       ))}
 
-      {/* Chat Element - Bottom Center - Static */}
+      {/* Chat Element - Bottom Center - Mobile Optimized */}
       {!showProblemForm && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="fixed bottom-2 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg mx-4 z-50"
+          className="fixed bottom-2 sm:bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-2rem)] max-w-lg mx-2 sm:mx-4 z-50"
+          style={{
+            paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+          }}
         >
         <div className="relative">
           {/* Outer container with animated gradient border */}
@@ -1083,8 +1099,8 @@ export default function PlaygroundPage() {
               {/* Subtle inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-xl"></div>
               
-                    <form onSubmit={handleSubmit} className="relative p-2 sm:p-3">
-                      <div className="flex items-center space-x-2">
+                    <form onSubmit={handleSubmit} className="relative p-3 sm:p-4">
+                      <div className="flex items-center space-x-3">
                         {/* Input field */}
                         <div className="flex-1 relative">
                           <input
@@ -1096,27 +1112,27 @@ export default function PlaygroundPage() {
                             onKeyDown={handleKeyDown}
                             placeholder={isSubmitting ? "Processing thought..." : "What's on your mind today?"}
                             disabled={isSubmitting}
-                            className="w-full bg-transparent text-white placeholder-gray-300 focus:outline-none text-sm sm:text-base font-light py-2 sm:py-3 px-2 sm:px-3 disabled:opacity-50"
-                      style={{ 
-                        fontFamily: 'Inter, sans-serif',
-                        textShadow: '0 0 10px rgba(255, 255, 255, 0.1)'
-                      }}
-                    />
-                    
-                    {/* Enhanced interactive circle element - Enter Button */}
-                    <motion.button
-                      type="submit"
-                      disabled={isSubmitting || !thought.trim()}
-                      whileHover={{ 
-                        scale: 1.2,
-                        boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)'
-                      }}
-                      whileTap={{ scale: 0.9 }}
-                      className={`absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center cursor-pointer backdrop-blur-sm border border-white/20 transition-all duration-200 ${
-                        isSubmitting || !thought.trim() 
-                          ? 'bg-white/10 cursor-not-allowed opacity-50' 
-                          : 'bg-white/30 hover:bg-white/40'
-                      }`}
+                            className="w-full bg-transparent text-white placeholder-gray-300 focus:outline-none text-base sm:text-lg font-medium py-3 sm:py-4 px-3 sm:px-4 disabled:opacity-50 min-h-[48px]"
+                            style={{ 
+                              fontFamily: 'Inter, sans-serif',
+                              textShadow: '0 0 10px rgba(255, 255, 255, 0.1)'
+                            }}
+                          />
+                          
+                          {/* Enhanced interactive circle element - Enter Button */}
+                          <motion.button
+                            type="submit"
+                            disabled={isSubmitting || !thought.trim()}
+                            whileHover={{ 
+                              scale: 1.2,
+                              boxShadow: '0 0 20px rgba(255, 255, 255, 0.3)'
+                            }}
+                            whileTap={{ scale: 0.9 }}
+                            className={`absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center cursor-pointer backdrop-blur-sm border border-white/20 transition-all duration-200 ${
+                              isSubmitting || !thought.trim() 
+                                ? 'bg-white/10 cursor-not-allowed opacity-50' 
+                                : 'bg-white/30 hover:bg-white/40'
+                            }`}
                     >
                       <motion.div 
                         className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${
@@ -1142,14 +1158,14 @@ export default function PlaygroundPage() {
             </div>
       </div>
 
-          {/* Enhanced instruction text below */}
+          {/* Enhanced instruction text below - Mobile Optimized */}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.0 }}
-            className="text-center text-white/80 text-xs sm:text-sm font-light mt-2 sm:mt-4 px-4"
+            className="text-center text-white/90 text-sm sm:text-base font-medium mt-3 sm:mt-4 px-4 py-2 rounded-lg backdrop-blur-sm bg-black/20 border border-white/10"
             style={{ 
-              textShadow: '0 0 10px rgba(255, 255, 255, 0.1)',
+              textShadow: '0 0 15px rgba(255, 255, 255, 0.2)',
               fontFamily: 'Inter, sans-serif'
             }}
           >
@@ -1159,13 +1175,19 @@ export default function PlaygroundPage() {
         </motion.div>
       )}
 
-      {/* Problem Form - Appears when chat is dragged to 3D model */}
+      {/* Problem Form - Mobile Optimized */}
       {showProblemForm && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-sm sm:max-w-md mx-4 z-30"
+          className="fixed inset-4 sm:absolute sm:top-1/2 sm:left-1/2 sm:transform sm:-translate-x-1/2 sm:-translate-y-1/2 w-auto sm:w-full max-w-sm sm:max-w-md mx-0 sm:mx-4 z-40"
+          style={{
+            top: 'max(16px, env(safe-area-inset-top))',
+            bottom: 'max(16px, env(safe-area-inset-bottom))',
+            left: 'max(16px, env(safe-area-inset-left))',
+            right: 'max(16px, env(safe-area-inset-right))',
+          }}
         >
           <div className="relative">
             {/* Outer container with animated gradient border */}
@@ -1253,15 +1275,18 @@ export default function PlaygroundPage() {
           onClose={() => setShowWellnessCenter(false)} 
         />
 
-        {/* Background Music Control - Bottom Right */}
+        {/* Background Music Control - Mobile Optimized */}
         <motion.button
           onClick={toggleMusic}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 rounded-full backdrop-blur-xl bg-white/10 border border-white/20 flex items-center justify-center text-white text-xl sm:text-2xl transition-all duration-300 hover:scale-110 hover:bg-white/20 z-40"
+          className="fixed bottom-16 right-4 sm:bottom-6 sm:right-6 w-14 h-14 sm:w-16 sm:h-16 rounded-full backdrop-blur-xl bg-white/15 border border-white/30 flex items-center justify-center text-white text-2xl sm:text-3xl transition-all duration-300 hover:scale-110 hover:bg-white/25 z-40 shadow-2xl"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1 }}
+          style={{
+            bottom: 'max(64px, calc(env(safe-area-inset-bottom) + 16px))',
+          }}
         >
           {isMusicPlaying ? '🔊' : '🔇'}
         </motion.button>
