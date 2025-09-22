@@ -208,18 +208,32 @@ export default function Home() {
   const { user, login } = useAuth();
   const router = useRouter();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState({ email: '', password: '', confirmPassword: '' });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
 
   // Handle login redirect from middleware
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    console.log('URL params:', urlParams.toString());
-    if (urlParams.get('login') === 'required') {
-      console.log('Showing login modal due to redirect');
-      setShowLoginModal(true);
-    }
+    const checkUrlParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      console.log('URL params:', urlParams.toString());
+      if (urlParams.get('login') === 'required') {
+        console.log('Showing login modal due to redirect');
+        setShowLoginModal(true);
+      }
+    };
+
+    // Check immediately
+    checkUrlParams();
+    
+    // Also check after a small delay to ensure URL is fully loaded
+    const timeoutId = setTimeout(checkUrlParams, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -245,6 +259,53 @@ export default function Home() {
       setLoginError('Login failed. Please try again.');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsRegistering(true);
+    setRegisterError('');
+
+    // Validate passwords match
+    if (registerData.password !== registerData.confirmPassword) {
+      setRegisterError('Passwords do not match');
+      setIsRegistering(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: registerData.email,
+          password: registerData.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowRegisterModal(false);
+        setRegisterData({ email: '', password: '', confirmPassword: '' });
+        
+        // Auto-login after successful registration
+        const loginResult = await login(registerData.email, registerData.password);
+        if (loginResult.success) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectTo = urlParams.get('redirect') || '/playground';
+          router.push(redirectTo);
+        }
+      } else {
+        setRegisterError(result.error || 'Registration failed');
+      }
+    } catch (error) {
+      setRegisterError('Registration failed. Please try again.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -382,10 +443,111 @@ export default function Home() {
               <p className="text-gray-400 text-sm">
                 Don&apos;t have an account?{' '}
                 <button
-                  onClick={() => router.push('/')}
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setShowRegisterModal(true);
+                  }}
                   className="text-purple-400 hover:text-purple-300 underline"
                 >
-                  Go to landing page
+                  Sign up here
+                </button>
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Register Modal */}
+      {showRegisterModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => setShowRegisterModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="bg-slate-800/90 backdrop-blur-xl rounded-2xl p-8 w-full max-w-md mx-4 border border-slate-600/20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
+              Join CalmRush
+            </h2>
+            
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={registerData.email}
+                  onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={registerData.password}
+                  onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Create a password"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={registerData.confirmPassword}
+                  onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+              
+              {registerError && (
+                <div className="text-red-400 text-sm text-center">
+                  {registerError}
+                </div>
+              )}
+              
+              <motion.button
+                type="submit"
+                disabled={isRegistering}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              >
+                {isRegistering ? 'Creating Account...' : 'Create Account'}
+              </motion.button>
+            </form>
+            
+            <div className="mt-6 text-center">
+              <p className="text-gray-400 text-sm">
+                Already have an account?{' '}
+                <button
+                  onClick={() => {
+                    setShowRegisterModal(false);
+                    setShowLoginModal(true);
+                  }}
+                  className="text-purple-400 hover:text-purple-300 underline"
+                >
+                  Sign in here
                 </button>
               </p>
             </div>
