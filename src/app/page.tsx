@@ -228,9 +228,17 @@ export default function Home() {
     const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
       console.log('URL params:', urlParams.toString());
-      if (urlParams.get('login') === 'required') {
+      console.log('User logged in:', !!user);
+      
+      // Only show login modal if user is not logged in and login is required
+      if (urlParams.get('login') === 'required' && !user) {
         console.log('Showing login modal due to redirect');
         setShowLoginModal(true);
+      } else if (urlParams.get('login') === 'required' && user) {
+        // If user is logged in, redirect to playground directly
+        console.log('User already logged in, redirecting to playground');
+        const redirectTo = urlParams.get('redirect') || '/playground';
+        router.push(redirectTo);
       }
     };
 
@@ -241,7 +249,7 @@ export default function Home() {
     const timeoutId = setTimeout(checkUrlParams, 100);
     
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

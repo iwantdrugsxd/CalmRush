@@ -917,19 +917,40 @@ export default function PlaygroundPage() {
           onMouseDown={(e) => handleThoughtMouseDown(e, thought.id, thought.text)}
           onTouchStart={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             const touch = e.touches[0];
-            const mouseEvent = {
-              ...e,
-              clientX: touch.clientX,
-              clientY: touch.clientY,
-              preventDefault: () => e.preventDefault(),
-              stopPropagation: () => e.stopPropagation()
-            } as any;
-            handleThoughtMouseDown(mouseEvent, thought.id, thought.text);
+            if (touch) {
+              const mouseEvent = {
+                ...e,
+                clientX: touch.clientX,
+                clientY: touch.clientY,
+                preventDefault: () => e.preventDefault(),
+                stopPropagation: () => e.stopPropagation()
+              } as any;
+              handleThoughtMouseDown(mouseEvent, thought.id, thought.text);
+            }
           }}
           onMouseUp={handleThoughtMouseUp}
+          onTouchMove={(e) => {
+            if (isDraggingThought && draggedThoughtId === thought.id) {
+              e.preventDefault();
+              e.stopPropagation();
+              const touch = e.touches[0];
+              if (touch) {
+                const mouseEvent = {
+                  ...e,
+                  clientX: touch.clientX,
+                  clientY: touch.clientY,
+                  preventDefault: () => e.preventDefault(),
+                  stopPropagation: () => e.stopPropagation()
+                } as any;
+                handleMouseMove(mouseEvent, thought.id);
+              }
+            }
+          }}
           onTouchEnd={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             const mouseEvent = {
               ...e,
               preventDefault: () => e.preventDefault(),
@@ -996,7 +1017,7 @@ export default function PlaygroundPage() {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
-          className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-lg mx-4 z-20"
+          className="fixed bottom-2 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg mx-4 z-50"
         >
         <div className="relative">
           {/* Outer container with animated gradient border */}
@@ -1026,7 +1047,7 @@ export default function PlaygroundPage() {
             />
             
             {/* Inner container with enhanced glassmorphism */}
-            <div className="relative backdrop-blur-2xl bg-slate-800/30 rounded-xl border border-slate-600/10 overflow-hidden">
+            <div className="relative backdrop-blur-2xl bg-slate-800/50 sm:bg-slate-800/30 rounded-xl border border-slate-600/20 sm:border-slate-600/10 overflow-hidden">
               {/* Subtle inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent rounded-xl"></div>
               
